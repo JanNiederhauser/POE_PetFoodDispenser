@@ -3,6 +3,22 @@ import ujson
 import time
 import socket
 import os
+import machine
+import neopixel
+
+# Setup RGB LED on GPIO 8
+LED_PIN = 8
+np = neopixel.NeoPixel(machine.Pin(LED_PIN), 1)
+
+def set_led(color):
+    colors = {
+        "red": (255, 0, 0),
+        "green": (0, 255, 0),
+        "blue": (0, 0, 255),
+        "off": (0, 0, 0)
+    }
+    np[0] = colors.get(color, (255, 0, 255))  # fallback = purple = error
+    np.write()
 
 WIFI_FILE = "wifi.json"
 
@@ -29,15 +45,20 @@ def connect_to_wifi():
     for _ in range(20):
         if wlan.isconnected():
             print("Connected:", wlan.ifconfig())
+            set_led("green")
             return True
         time.sleep(1)
+
     print("Failed to connect.")
+    set_led("red")
     return False
 
 def start_config_portal():
     ap = network.WLAN(network.AP_IF)
     ap.active(True)
     ap.config(essid="ESP32-Setup")
+
+    set_led("blue")
 
     html = """<!DOCTYPE html>
 <html><head><title>WiFi Setup</title></head>
@@ -58,10 +79,10 @@ Password: <input name="p" type="password"><br>
     print("Config portal running at 192.168.4.1")
 
     while True:
-        conn, addr = s.accept()
-        req = conn.recv(1024).decode()
-        if "/?s=" in req and "&p=" in req:
-            try:
+        try:
+            conn, addr = s.accept()
+            req = conn.recv(1024).decode()
+            if "/?s=" in req and "&p=" in req:
                 parts = req.split("GET /?s=")[1].split(" ")[0]
                 ssid, password = parts.split("&p=")
                 ssid = ssid.replace("%20", " ")
@@ -70,7 +91,8 @@ Password: <input name="p" type="password"><br>
                 conn.close()
                 time.sleep(2)
                 machine.reset()
-            except:
-                pass
-        conn.send("HTTP/1.1 200 OK\r\n\r\n" + html)
-        conn.close()
+            conn.send("HTTP/1.1 200 OK\r\n\r\n" + html)
+            conn.close()
+        except Exception as e:
+            print("Config portal error:", e)
+            set_led("red")
