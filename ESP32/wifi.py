@@ -11,15 +11,19 @@ LED_PIN = 8
 np = neopixel.NeoPixel(machine.Pin(LED_PIN), 1)
 
 
-def set_led(color):
-    colors = {
+def set_led(color, brightness=0.08):  # 0.0 (off) to 1.0 (full)
+    base_colors = {
         "red": (255, 0, 0),
         "green": (0, 255, 0),
         "blue": (0, 0, 255),
         "off": (0, 0, 0)
     }
-    np[0] = colors.get(color, (255, 0, 255))  # fallback = purple = error
+    raw = base_colors.get(color, (255, 0, 255))  # fallback = purple = error
+    # scale by brightness (clamped 0..255)
+    scaled = tuple(int(x * brightness) for x in raw)
+    np[0] = scaled
     np.write()
+
 
 
 WIFI_FILE = "wifi.json"
@@ -124,11 +128,20 @@ def start_config_portal():
                     conn.send(
                         b"HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nNo scan")
 
+
             elif "GET /nexani_logo_transparent.png" in req:
-                with open("nexani_logo_transparent.png", "rb") as f:
-                    conn.send(
-                        b"HTTP/1.1 200 OK\r\nContent-Type: image/png\r\n\r\n")
-                    conn.send(f.read())
+                try:
+                    with open("nexani_logo_transparent.png", "rb") as f:
+                        conn.send(b"HTTP/1.1 200 OK\r\nContent-Type: image/png\r\n\r\n")
+                        while True:
+                            data = f.read(1024)
+                            if not data:
+                                break
+                            conn.send(data)
+                except Exception as e:
+                    print("Logo error:", e)
+                    conn.send(b"HTTP/1.1 404 Not Found\r\n\r\nNot Found")
+
 
             elif "GET /" in req or "GET /index.html" in req:
                 with open("index.html") as f:
