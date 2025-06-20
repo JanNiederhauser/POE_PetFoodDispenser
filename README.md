@@ -76,7 +76,7 @@ MicroPython v1.xx on 202x-xx-xx; ESP32-C6 with ESP32-C6
 mpremote connect auto fs cp wifi.py :
 mpremote connect auto fs cp main.py :
 mpremote connect auto fs cp index.html :
-mpremote connect auto fs cp nexani_logo.png :
+mpremote connect auto fs cp nexani_logo_transparent.png :
 ```
 
 ### 2. Reboot the ESP32
@@ -86,6 +86,32 @@ If `wifi.json` is not found, the device creates an Access Point named `ESP32-Set
 These credentials will be saved in `wifi.json`.
 
 ---
+
+## 🧪 Device Control via REPL (MicroPython)
+
+You can use the MicroPython REPL to inspect files and reboot the ESP32 manually.
+
+### 📂 List and Delete Files
+
+Use the following commands to view or delete files stored on the device:
+
+```python
+import os
+
+List all files in the root directory
+print(os.listdir())
+
+Delete a specific file (e.g., boot.py)
+os.remove("boot.py")
+
+### 🔄 Reboot the Device
+To trigger a soft reboot from the REPL:
+
+python
+Copy
+Edit
+import machine
+machine.reset()
 
 ## 📁 Project File Overview
 
