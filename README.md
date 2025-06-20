@@ -73,8 +73,10 @@ MicroPython v1.xx on 202x-xx-xx; ESP32-C6 with ESP32-C6
 ### 1. Upload files
 
 ```bash
-mpremote connect auto fs cp main.py :
 mpremote connect auto fs cp wifi.py :
+mpremote connect auto fs cp main.py :
+mpremote connect auto fs cp index.html :
+mpremote connect auto fs cp nexani_logo.png :
 ```
 
 ### 2. Reboot the ESP32
