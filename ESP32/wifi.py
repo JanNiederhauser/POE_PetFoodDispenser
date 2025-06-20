@@ -59,12 +59,25 @@ def connect_to_wifi():
     return False
 
 
+def scan_and_save_wifi():
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    nets = wlan.scan()
+    ssids = sorted(set(net[0].decode()
+                   for net in nets if net[0]), key=lambda x: x.lower())
+    with open("wifiscan.json", "w") as f:
+        ujson.dump(ssids, f)
+
+
 def start_config_portal():
     ap = network.WLAN(network.AP_IF)
     ap.active(True)
     ap.config(essid="ESP32-Setup")
 
     set_led("blue")
+
+    # Scan and save wifi SSIDs
+    scan_and_save_wifi()
 
     addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
     s = socket.socket()
@@ -99,6 +112,17 @@ def start_config_portal():
                 except Exception as e:
                     print("Parse error:", e)
                     set_led("red")
+
+            elif "GET /wifiscan.json" in req:
+                if "wifiscan.json" in os.listdir():
+                    with open("wifiscan.json", "r") as f:
+                        data = f.read()
+                    conn.send(
+                        b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n")
+                    conn.send(data)
+                else:
+                    conn.send(
+                        b"HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nNo scan")
 
             elif "GET /nexani_logo_transparent.png" in req:
                 with open("nexani_logo_transparent.png", "rb") as f:

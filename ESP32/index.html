@@ -11,9 +11,7 @@
       --secondary: #035f79;
       --bg: #f6f5f3;
     }
-    body {
-      background-color: var(--bg);
-    }
+    body { background-color: var(--bg); }
   </style>
 </head>
 <body class="min-h-screen flex items-center justify-center px-4">
@@ -25,7 +23,10 @@
     <form id="wifi-form" class="space-y-6 text-left">
       <div>
         <label for="ssid" class="block mb-2 text-sm font-medium text-gray-700">SSID</label>
-        <input type="text" id="ssid" name="ssid" required
+        <select id="ssid-select" class="w-full px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 mb-2 focus:ring-2 focus:ring-[color:var(--primary)] outline-none">
+          <option value="">-- Select network --</option>
+        </select>
+        <input type="text" id="ssid" name="ssid" placeholder="Or enter SSID manually"
           class="w-full px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 focus:ring-2 focus:ring-[color:var(--primary)] outline-none" />
       </div>
       <div>
@@ -40,8 +41,25 @@
       <p id="status" class="text-sm text-center text-gray-600 mt-4"></p>
     </form>
   </div>
-
   <script>
+    // Populate dropdown from /wifiscan.json
+    fetch('/wifiscan.json')
+      .then(res => res.json())
+      .then(ssids => {
+        const sel = document.getElementById('ssid-select');
+        ssids.forEach(ssid => {
+          const opt = document.createElement('option');
+          opt.value = ssid;
+          opt.textContent = ssid;
+          sel.appendChild(opt);
+        });
+      });
+
+    // Auto-fill text input when user selects from dropdown
+    document.getElementById('ssid-select').addEventListener('change', function() {
+      document.getElementById('ssid').value = this.value;
+    });
+
     const form = document.getElementById('wifi-form');
     const status = document.getElementById('status');
 
