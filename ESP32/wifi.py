@@ -149,11 +149,11 @@ def start_config_portal():
                     conn.send(
                         b"HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nNo scan")
             # --- Serve logo (in chunks!) ---
-            elif "GET /nexani_logo_transparent.png" in req:
+            elif "GET /nexani_logo_transparent.webp" in req:
                 try:
-                    with open("nexani_logo_transparent.png", "rb") as f:
+                    with open("nexani_logo_transparent.webp", "rb") as f:
                         conn.send(
-                            b"HTTP/1.1 200 OK\r\nContent-Type: image/png\r\n\r\n")
+                            b"HTTP/1.1 200 OK\r\nContent-Type: image/webp\r\n\r\n")
                         while True:
                             data = f.read(1024)
                             if not data:
