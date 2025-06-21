@@ -1,87 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Nexani Wi-Fi Setup</title>
-  <link rel="stylesheet" href="tailwind-lite.css" />
-  <style>
-    :root {
-      --primary: #049bc5;
-      --secondary: #035f79;
-      --bg: #f6f5f3;
-    }
-    body { background-color: var(--bg); }
-  </style>
-</head>
-<body class="min-h-screen flex items-center justify-center px-4">
-  <div class="w-full max-w-md bg-white p-10 pt-6 rounded-2xl shadow-lg border border-gray-200 text-center">
-    <div class="mb-6 flex justify-center">
-      <img src="/nexani_logo_transparent.webp" alt="Nexani Logo" class="h-24 w-auto mb-2" style="object-fit:contain; display:block; margin-left:auto; margin-right:auto;">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nexani Wi-Fi Setup</title>
+    <style>
+      :root {
+        --primary: #049bc5;
+        --secondary: #035f79;
+        --bg: #f6f5f3;
+      }
+      body {
+        background-color: var(--bg);
+      }
+
+      :root {
+        --primary: #049bc5;
+        --secondary: #035f79;
+        --bg: #f6f5f3;
+      }
+
+      body {
+        background-color: var(--bg);
+        margin: 0;
+        font-family: sans-serif;
+      }
+
+      .min-h-screen {
+        min-height: 100vh;
+      }
+      .flex {
+        display: flex;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .justify-center {
+        justify-content: center;
+      }
+      .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      .w-full {
+        width: 100%;
+      }
+      .max-w-md {
+        max-width: 28rem;
+      }
+      .bg-white {
+        background-color: #fff;
+      }
+      .p-10 {
+        padding: 2.5rem;
+      }
+      .pt-6 {
+        padding-top: 1.5rem;
+      }
+      .rounded-2xl {
+        border-radius: 1rem;
+      }
+      .shadow-lg {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      }
+      .border {
+        border-width: 1px;
+      }
+      .border-gray-200 {
+        border-color: #e5e7eb;
+      }
+      .text-center {
+        text-align: center;
+      }
+      .mb-6 {
+        margin-bottom: 1.5rem;
+      }
+      .flex {
+        display: flex;
+      }
+      .justify-center {
+        justify-content: center;
+      }
+      .h-24 {
+        height: 6rem;
+      }
+      .w-auto {
+        width: auto;
+      }
+      .text-2xl {
+        font-size: 1.5rem;
+        line-height: 2rem;
+      }
+      .font-bold {
+        font-weight: 700;
+      }
+      .mb-6 {
+        margin-bottom: 1.5rem;
+      }
+      .space-y-6 > * + * {
+        margin-top: 1.5rem;
+      }
+      .text-left {
+        text-align: left;
+      }
+      .block {
+        display: block;
+      }
+      .mb-2 {
+        margin-bottom: 0.5rem;
+      }
+      .text-sm {
+        font-size: 0.875rem;
+      }
+      .font-medium {
+        font-weight: 500;
+      }
+      .text-gray-700 {
+        color: #374151;
+      }
+      .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      .py-2 {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+      .rounded-lg {
+        border-radius: 0.5rem;
+      }
+      .bg-gray-100 {
+        background-color: #f3f4f6;
+      }
+      .border-gray-300 {
+        border-color: #d1d5db;
+      }
+      .focus\:ring-2:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--primary);
+      }
+      .outline-none {
+        outline: none;
+      }
+      .bg-\[color\:var\(--primary\)\] {
+        background-color: var(--primary);
+      }
+      .hover\:bg-\[color\:var\(--secondary\)\]:hover {
+        background-color: var(--secondary);
+      }
+      .text-white {
+        color: #fff;
+      }
+      .transition {
+        transition: all 0.2s ease-in-out;
+      }
+      .mt-4 {
+        margin-top: 1rem;
+      }
+      .text-gray-600 {
+        color: #4b5563;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex items-center justify-center px-4">
+    <div
+      class="w-full max-w-md bg-white p-10 pt-6 rounded-2xl shadow-lg border border-gray-200 text-center"
+    >
+      <div class="mb-6 flex justify-center">
+        <img
+          src="/nexani_logo_transparent.webp"
+          alt="Nexani Logo"
+          class="h-24 w-auto mb-2"
+          style="
+            object-fit: contain;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+          "
+        />
+      </div>
+      <h2 class="text-2xl font-bold mb-6 text-[color:var(--primary)]">
+        Nexani Wi-Fi Setup
+      </h2>
+      <form id="wifi-form" class="space-y-6 text-left">
+        <div>
+          <label for="ssid" class="block mb-2 text-sm font-medium text-gray-700"
+            >SSID</label
+          >
+          <select
+            id="ssid-select"
+            class="w-full px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 mb-2 focus:ring-2 focus:ring-[color:var(--primary)] outline-none"
+          >
+            <option value="">-- Select network --</option>
+          </select>
+          <input
+            type="text"
+            id="ssid"
+            name="ssid"
+            placeholder="Or enter SSID manually"
+            class="w-full px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 focus:ring-2 focus:ring-[color:var(--primary)] outline-none"
+          />
+        </div>
+        <div>
+          <label
+            for="password"
+            class="block mb-2 text-sm font-medium text-gray-700"
+            >Password</label
+          >
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="w-full px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 focus:ring-2 focus:ring-[color:var(--primary)] outline-none"
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-full bg-[color:var(--primary)] hover:bg-[color:var(--secondary)] text-white font-bold py-2 px-4 rounded-lg transition"
+        >
+          Connect
+        </button>
+        <p id="status" class="text-sm text-center text-gray-600 mt-4"></p>
+      </form>
     </div>
-    <h2 class="text-2xl font-bold mb-6 text-[color:var(--primary)]">Nexani Wi-Fi Setup</h2>
-    <form id="wifi-form" class="space-y-6 text-left">
-      <div>
-        <label for="ssid" class="block mb-2 text-sm font-medium text-gray-700">SSID</label>
-        <select id="ssid-select" class="w-full px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 mb-2 focus:ring-2 focus:ring-[color:var(--primary)] outline-none">
-          <option value="">-- Select network --</option>
-        </select>
-        <input type="text" id="ssid" name="ssid" placeholder="Or enter SSID manually"
-          class="w-full px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 focus:ring-2 focus:ring-[color:var(--primary)] outline-none" />
-      </div>
-      <div>
-        <label for="password" class="block mb-2 text-sm font-medium text-gray-700">Password</label>
-        <input type="password" id="password" name="password" required
-          class="w-full px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 focus:ring-2 focus:ring-[color:var(--primary)] outline-none" />
-      </div>
-      <button type="submit"
-        class="w-full bg-[color:var(--primary)] hover:bg-[color:var(--secondary)] text-white font-bold py-2 px-4 rounded-lg transition">
-        Connect
-      </button>
-      <p id="status" class="text-sm text-center text-gray-600 mt-4"></p>
-    </form>
-  </div>
-  <script>
-    // Populate dropdown from /wifiscan.json
-    fetch('/wifiscan.json')
-      .then(res => res.json())
-      .then(ssids => {
-        const sel = document.getElementById('ssid-select');
-        ssids.forEach(ssid => {
-          const opt = document.createElement('option');
-          opt.value = ssid;
-          opt.textContent = ssid;
-          sel.appendChild(opt);
+    <script>
+      // Populate dropdown from /wifiscan.json
+      fetch("/wifiscan.json")
+        .then((res) => res.json())
+        .then((ssids) => {
+          const sel = document.getElementById("ssid-select");
+          ssids.forEach((ssid) => {
+            const opt = document.createElement("option");
+            opt.value = ssid;
+            opt.textContent = ssid;
+            sel.appendChild(opt);
+          });
         });
+
+      // Auto-fill text input when user selects from dropdown
+      document
+        .getElementById("ssid-select")
+        .addEventListener("change", function () {
+          document.getElementById("ssid").value = this.value;
+        });
+
+      const form = document.getElementById("wifi-form");
+      const status = document.getElementById("status");
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const ssid = document.getElementById("ssid").value;
+        const password = document.getElementById("password").value;
+
+        status.textContent = "Sending credentials...";
+
+        fetch(
+          `/?s=${encodeURIComponent(ssid)}&p=${encodeURIComponent(password)}`
+        )
+          .then((response) => {
+            if (response.ok) {
+              status.textContent = "Saved! Rebooting device...";
+            } else {
+              status.textContent = "Failed to save settings.";
+            }
+          })
+          .catch(() => {
+            status.textContent = "Connection error.";
+          });
       });
-
-    // Auto-fill text input when user selects from dropdown
-    document.getElementById('ssid-select').addEventListener('change', function() {
-      document.getElementById('ssid').value = this.value;
-    });
-
-    const form = document.getElementById('wifi-form');
-    const status = document.getElementById('status');
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const ssid = document.getElementById('ssid').value;
-      const password = document.getElementById('password').value;
-
-      status.textContent = 'Sending credentials...';
-
-      fetch(`/?s=${encodeURIComponent(ssid)}&p=${encodeURIComponent(password)}`)
-        .then(response => {
-          if (response.ok) {
-            status.textContent = 'Saved! Rebooting device...';
-          } else {
-            status.textContent = 'Failed to save settings.';
-          }
-        })
-        .catch(() => {
-          status.textContent = 'Connection error.';
-        });
-    });
-  </script>
-</body>
+    </script>
+  </body>
 </html>
