@@ -101,7 +101,7 @@ def start_config_portal():
     # Start AP
     ap = network.WLAN(network.AP_IF)
     ap.active(True)
-    ap.config(essid="ESP32-Setup")
+    ap.config(essid="Nexani-Setup")
     set_led("blue")
     # Scan networks
     scan_and_save_wifi()
