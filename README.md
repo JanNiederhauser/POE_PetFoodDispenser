@@ -97,21 +97,26 @@ Use the following commands to view or delete files stored on the device:
 
 ```python
 import os
+```
 
 List all files in the root directory
+```python
 print(os.listdir())
+```
 
 Delete a specific file (e.g., boot.py)
+```python
 os.remove("boot.py")
+```
 
 ### 🔄 Reboot the Device
 To trigger a soft reboot from the REPL:
 
 python
-Copy
-Edit
+```python
 import machine
 machine.reset()
+```
 
 ## 📁 Project File Overview
 
