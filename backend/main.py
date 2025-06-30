@@ -1,0 +1,182 @@
+from fastapi import FastAPI, HTTPException
+from datetime import datetime, time
+from fastapi.staticfiles import StaticFiles
+import datasets
+import models
+
+app = FastAPI()
+
+# ----------- Utilities -----------
+
+def is_within_time_window(time_window: str) -> bool:
+    now = datetime.now().time()
+    try:
+        start_str, end_str = time_window.split("-")
+        start = time.fromisoformat(start_str)
+        end = time.fromisoformat(end_str)
+        return start <= now <= end
+    except Exception:
+        return False
+
+def find_pet(rfid: str):
+    return next((p for p in datasets.pets if p["rfid"] == rfid), None)
+
+def find_schedule(rfid: str):
+    return next((s for s in datasets.feeding_schedules if s["rfid"] == rfid), None)
+
+def find_silo(silo_id: int):
+    return next((s for s in datasets.silos if s["id"] == silo_id), None)
+
+# ----------- Pet Management -----------
+
+@app.post("/pet/create")
+def create_pet(name: str, rfid: str, silo: int):
+    if find_pet(rfid):
+        raise HTTPException(status_code=400, detail="RFID already registered")
+    pet = models.Pet(rfid=rfid, name=name, silo=silo)
+    datasets.pets.append(pet.model_dump())
+    return {"status": "created", "pet": pet}
+
+@app.get("/pet/pets/list")
+def list_pets(limit: int = 10):
+    return datasets.pets[0:limit]
+
+@app.get("/pet/silos/list")
+def list_silos(limit: int = 10):
+    return datasets.silos[0:limit]
+
+@app.get("/pet/schedules/list")
+def list_schedules(limit: int = 10):
+    return datasets.feeding_schedules[0:limit]
+
+@app.get("/pet/get/{rfid}")
+def get_pet(rfid: str):
+    pet = find_pet(rfid)
+    if pet:
+        return pet
+    raise HTTPException(status_code=404, detail="Pet not found")
+
+@app.post("/pet/delete/{rfid}")
+def delete_pet(rfid: str):
+    pet = find_pet(rfid)
+    if not pet:
+        raise HTTPException(status_code=404, detail="Pet not found")
+    datasets.pets.remove(pet)
+    return {"status": "deleted"}
+
+# ----------- Feeding Schedule Management -----------
+
+@app.post("/schedule/create")
+def create_schedule(schedule: models.FeedingSchedule):
+    if find_schedule(schedule.rfid):
+        raise HTTPException(status_code=400, detail="Schedule already exists")
+    datasets.feeding_schedules.append(schedule.model_dump())
+    return {"status": "created", "schedule": schedule}
+
+@app.post("/schedule/update")
+def update_schedule(schedule: models.FeedingSchedule):
+    for idx, s in enumerate(datasets.feeding_schedules):
+        if s["rfid"] == schedule.rfid:
+            datasets.feeding_schedules[idx] = schedule.model_dump()
+            return {"status": "updated", "schedule": schedule}
+    raise HTTPException(status_code=404, detail="Schedule not found")
+
+# ----------- Feeding Logic -----------
+
+@app.post("/feeding/check/{rfid}")
+def feeding_check(rfid: str):
+    pet = find_pet(rfid)
+    if not pet:
+        datasets.unknown_rfid_events.append({"rfid": rfid, "timestamp": datetime.now()})
+        raise HTTPException(status_code=404, detail="Pet not found")
+
+    sched = find_schedule(rfid)
+    if not sched:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+
+    allowed = is_within_time_window(sched["timeWindow"])
+    return models.FeedingCheckResponse(
+        allowed=allowed,
+        siloId=pet["silo"],
+        maxAmount=sched["amount"]
+    )
+
+@app.post("/feeding/confirm")
+def feeding_confirm(rfid: str, newScaleWeight: float):
+    pet = find_pet(rfid)
+    if not pet:
+        raise HTTPException(status_code=404, detail="Pet not found")
+
+    silo = find_silo(pet["silo"])
+    if not silo:
+        raise HTTPException(status_code=404, detail="Silo not found")
+
+    sched = find_schedule(rfid)
+    if not sched:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+
+    prev_weight = silo["stockWeight"]
+    dispensed = round(prev_weight - newScaleWeight, 3)
+    violated = not is_within_time_window(sched["timeWindow"])
+
+    silo["stockWeight"] = newScaleWeight
+    datasets.last_feedings[rfid] = datetime.now()
+
+    event = models.FeedingEvent(
+        rfid=rfid,
+        timestamp=datetime.now(),
+        amountDispensed=dispensed,
+        violatedSchedule=violated
+    )
+
+    return {"status": "ok", "event": event}
+
+# ----------- Unknown RFID Handling -----------
+
+@app.get("/dashboard/unknown-rfids")
+def list_unknown_rfid():
+    return datasets.unknown_rfid_events
+
+@app.post("/dashboard/unknown-rfids/dismiss/{rfid}")
+def dismiss_unknown_rfid(rfid: str):
+    datasets.unknown_rfid_events = [
+        e for e in datasets.unknown_rfid_events if e["rfid"] != rfid
+    ]
+    return {"status": "dismissed"}
+
+@app.post("/dashboard/register-pet")
+def register_pet_with_schedule(
+    name: str,
+    rfid: str,
+    silo: int,
+    timeWindow: str,
+    amount: float
+):
+    if find_pet(rfid):
+        raise HTTPException(status_code=400, detail="Pet already exists")
+
+    pet = models.Pet(rfid=rfid, name=name, silo=silo)
+    schedule = models.FeedingSchedule(rfid=rfid, timeWindow=timeWindow, amount=amount)
+
+    datasets.pets.append(pet.model_dump())
+    datasets.feeding_schedules.append(schedule.model_dump())
+
+    datasets.unknown_rfid_events = [
+        e for e in datasets.unknown_rfid_events if e["rfid"] != rfid
+    ]
+
+    return {"status": "registered", "pet": pet, "schedule": schedule}
+
+# ----------- Backend Health -----------
+
+@app.get("/backend/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/backend/connection")
+def connection():
+    return {"status": "connected"}
+
+#------------ Dashboard -----------
+
+app.mount("/", StaticFiles(directory="dashboard", html=True), name="dashboard")

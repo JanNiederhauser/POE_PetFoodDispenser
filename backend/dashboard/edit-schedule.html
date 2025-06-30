@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Schedule</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-4">
+  <h1 class="text-xl font-bold mb-4">Edit Feeding Schedule</h1>
+  <form id="edit-form" class="space-y-4">
+    <input type="hidden" id="rfid" />
+    <div>
+      <label class="block text-sm">Time Window</label>
+      <input id="timeWindow" type="text" placeholder="08:00-20:00" class="bg-gray-800 px-4 py-2 rounded w-full" />
+    </div>
+    <div>
+      <label class="block text-sm">Amount (kg)</label>
+      <input id="amount" type="number" step="0.1" class="bg-gray-800 px-4 py-2 rounded w-full" />
+    </div>
+    <button class="bg-teal-500 px-4 py-2 rounded">Save</button>
+  </form>
+  <script src="js/api.js"></script>
+  <script src="js/edit-schedule.js"></script>
+</body>
+</html>
