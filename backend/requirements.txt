@@ -1,4 +1,3 @@
 fastapi
 fastapi[standard]
 uvicorn
-chartjs-chart-financial

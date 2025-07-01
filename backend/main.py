@@ -6,6 +6,7 @@ import models
 
 app = FastAPI()
 
+
 # ----------- Utilities -----------
 
 def is_within_time_window(time_window: str) -> bool:
@@ -18,17 +19,36 @@ def is_within_time_window(time_window: str) -> bool:
     except Exception:
         return False
 
+
 def find_pet(rfid: str):
     return next((p for p in datasets.pets if p["rfid"] == rfid), None)
+
 
 def find_schedule(rfid: str):
     return next((s for s in datasets.feeding_schedules if s["rfid"] == rfid), None)
 
+
 def find_silo(silo_id: int):
     return next((s for s in datasets.silos if s["id"] == silo_id), None)
 
-# ----------- Pet Management -----------
 
+# ----------- listings -----------
+@app.get("/pet/list")
+def list_pets(limit: int = 10):
+    return datasets.pets[0:limit]
+
+
+@app.get("/silo/list")
+def list_silos(limit: int = 10):
+    return datasets.silos[0:limit]
+
+
+@app.get("/schedule/list")
+def list_schedules(limit: int = 10):
+    return datasets.feeding_schedules[0:limit]
+
+
+# ----------- Pet Management -----------
 @app.post("/pet/create")
 def create_pet(name: str, rfid: str, silo: int):
     if find_pet(rfid):
@@ -37,17 +57,6 @@ def create_pet(name: str, rfid: str, silo: int):
     datasets.pets.append(pet.model_dump())
     return {"status": "created", "pet": pet}
 
-@app.get("/pet/pets/list")
-def list_pets(limit: int = 10):
-    return datasets.pets[0:limit]
-
-@app.get("/pet/silos/list")
-def list_silos(limit: int = 10):
-    return datasets.silos[0:limit]
-
-@app.get("/pet/schedules/list")
-def list_schedules(limit: int = 10):
-    return datasets.feeding_schedules[0:limit]
 
 @app.get("/pet/get/{rfid}")
 def get_pet(rfid: str):
@@ -56,6 +65,7 @@ def get_pet(rfid: str):
         return pet
     raise HTTPException(status_code=404, detail="Pet not found")
 
+
 @app.post("/pet/delete/{rfid}")
 def delete_pet(rfid: str):
     pet = find_pet(rfid)
@@ -63,6 +73,7 @@ def delete_pet(rfid: str):
         raise HTTPException(status_code=404, detail="Pet not found")
     datasets.pets.remove(pet)
     return {"status": "deleted"}
+
 
 # ----------- Feeding Schedule Management -----------
 
@@ -73,6 +84,7 @@ def create_schedule(schedule: models.FeedingSchedule):
     datasets.feeding_schedules.append(schedule.model_dump())
     return {"status": "created", "schedule": schedule}
 
+
 @app.post("/schedule/update")
 def update_schedule(schedule: models.FeedingSchedule):
     for idx, s in enumerate(datasets.feeding_schedules):
@@ -80,6 +92,7 @@ def update_schedule(schedule: models.FeedingSchedule):
             datasets.feeding_schedules[idx] = schedule.model_dump()
             return {"status": "updated", "schedule": schedule}
     raise HTTPException(status_code=404, detail="Schedule not found")
+
 
 # ----------- Feeding Logic -----------
 
@@ -100,6 +113,7 @@ def feeding_check(rfid: str):
         siloId=pet["silo"],
         maxAmount=sched["amount"]
     )
+
 
 @app.post("/feeding/confirm")
 def feeding_confirm(rfid: str, newScaleWeight: float):
@@ -131,11 +145,13 @@ def feeding_confirm(rfid: str, newScaleWeight: float):
 
     return {"status": "ok", "event": event}
 
+
 # ----------- Unknown RFID Handling -----------
 
 @app.get("/dashboard/unknown-rfids")
 def list_unknown_rfid():
     return datasets.unknown_rfid_events
+
 
 @app.post("/dashboard/unknown-rfids/dismiss/{rfid}")
 def dismiss_unknown_rfid(rfid: str):
@@ -144,13 +160,14 @@ def dismiss_unknown_rfid(rfid: str):
     ]
     return {"status": "dismissed"}
 
+
 @app.post("/dashboard/register-pet")
 def register_pet_with_schedule(
-    name: str,
-    rfid: str,
-    silo: int,
-    timeWindow: str,
-    amount: float
+        name: str,
+        rfid: str,
+        silo: int,
+        timeWindow: str,
+        amount: float
 ):
     if find_pet(rfid):
         raise HTTPException(status_code=400, detail="Pet already exists")
@@ -167,16 +184,19 @@ def register_pet_with_schedule(
 
     return {"status": "registered", "pet": pet, "schedule": schedule}
 
+
 # ----------- Backend Health -----------
 
 @app.get("/backend/health")
 def health():
     return {"status": "ok"}
 
+
 @app.get("/backend/connection")
 def connection():
     return {"status": "connected"}
 
-#------------ Dashboard -----------
+
+# ------------ Dashboard mount -----------
 
 app.mount("/", StaticFiles(directory="dashboard", html=True), name="dashboard")

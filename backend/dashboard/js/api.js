@@ -1,9 +1,9 @@
 const API = {
   async getSilos() {
-    return fetch("/pet/silos/list").then(res => res.json());
+    return fetch("/silo/list").then(res => res.json());
   },
   async getPets() {
-    return fetch("/pet/pets/list").then(res => res.json());
+    return fetch("/pet/list").then(res => res.json());
   },
   async getUnknownRFIDs() {
     return fetch("/dashboard/unknown-rfids").then(res => res.json());
