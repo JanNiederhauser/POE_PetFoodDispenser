@@ -6,6 +6,8 @@ import models
 
 app = FastAPI()
 
+# TODO - add max about of food dispensed per cat per time window
+
 
 # ----------- Utilities -----------
 
@@ -95,6 +97,8 @@ def update_schedule(schedule: models.FeedingSchedule):
 
 
 # ----------- Feeding Logic -----------
+
+# TODO response bool false when not allowed to feed
 
 @app.post("/feeding/check/{rfid}")
 def feeding_check(rfid: str):
