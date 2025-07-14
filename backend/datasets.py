@@ -16,10 +16,16 @@ pets = [
 silos = [
     {
         "id": 1,
+        "height": 23,
+        "currentHeight": 10,
+        "percentage": 100,
         "stockWeight": 12.6
     },
     {
         "id": 2,
+        "height": 23,
+        "currentHeight": 22,
+        "percentage": 100,
         "stockWeight": 5.3
     }
 ]
