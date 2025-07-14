@@ -6,7 +6,6 @@ import models
 
 app = FastAPI()
 
-
 # ----------- Utilities -----------
 
 def is_within_time_window(time_window: str) -> bool:
@@ -77,6 +76,8 @@ def delete_pet(rfid: str):
 
 # ----------- Feeding Schedule Management -----------
 
+# TODO rework schedule dataset and logic to allow for intervals and grams
+
 @app.post("/schedule/create")
 def create_schedule(schedule: models.FeedingSchedule):
     if find_schedule(schedule.rfid):
@@ -98,6 +99,7 @@ def update_schedule(schedule: models.FeedingSchedule):
 
 @app.post("/feeding/check/{rfid}")
 def feeding_check(rfid: str):
+    #TODO give brrrr data on how much food can be dispensed
     pet = find_pet(rfid)
     if not pet:
         datasets.unknown_rfid_events.append({"rfid": rfid, "timestamp": datetime.now()})
@@ -106,7 +108,7 @@ def feeding_check(rfid: str):
     sched = find_schedule(rfid)
     if not sched:
         raise HTTPException(status_code=404, detail="Schedule not found")
-
+    # TODO rework schedule system so its 30min 100g == cat can enter every 30min and get 100g per 30min
     allowed = is_within_time_window(sched["timeWindow"])
     return models.FeedingCheckResponse(
         allowed=allowed,
@@ -116,7 +118,7 @@ def feeding_check(rfid: str):
 
 
 @app.post("/feeding/confirm")
-def feeding_confirm(rfid: str, newScaleWeight: float):
+def feeding_confirm(rfid: str, newScaleWeight: float, currentHeight: float):
     pet = find_pet(rfid)
     if not pet:
         raise HTTPException(status_code=404, detail="Pet not found")
@@ -132,6 +134,8 @@ def feeding_confirm(rfid: str, newScaleWeight: float):
     prev_weight = silo["stockWeight"]
     dispensed = round(prev_weight - newScaleWeight, 3)
     violated = not is_within_time_window(sched["timeWindow"])
+
+    silo["percentage"] =  100 - currentHeight * 100 / silo["height"]
 
     silo["stockWeight"] = newScaleWeight
     datasets.last_feedings[rfid] = datetime.now()
