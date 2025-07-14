@@ -97,6 +97,8 @@ def update_schedule(schedule: models.FeedingSchedule):
 
 # ----------- Feeding Logic -----------
 
+# TODO response bool false when not allowed to feed
+
 @app.post("/feeding/check/{rfid}")
 def feeding_check(rfid: str):
     #TODO give brrrr data on how much food can be dispensed
