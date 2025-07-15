@@ -13,4 +13,4 @@ if not wifi.connect_to_wifi():
 # Wait briefly before launching main system
 print("WiFi ready, starting dispenser...")
 time.sleep(1)
-machine.main("petfooddispenser.py")  # Start modified main logic
+#machine.main("petfooddispenser.py")  # Start modified main logic

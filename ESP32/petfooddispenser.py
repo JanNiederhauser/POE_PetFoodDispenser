@@ -9,7 +9,7 @@ from hcsr04 import HCSR04
 from hx711 import HX711
 
 # --- CONFIGURATION ---
-API_BASE = "http://your.backend/api"
+API_BASE = "http://127.0.0.1:8000"  # Backend API base URL
 SERVO_ENTRY_LOCK_PIN = 6    # GPIO6 - Entry servo
 SERVO_PLATE1_LOCK_PIN = 7   # GPIO7 - Lock plate 1 (CD-ROM or servo)
 SERVO_PLATE2_LOCK_PIN = 8   # GPIO8 - Lock plate 2 (CD-ROM or servo)
