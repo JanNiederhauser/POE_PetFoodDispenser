@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-4">
+  <h1 class="text-xl font-bold mb-4">Register your pet</h1>
+  <form id="register-form" class="space-y-4">
+    <input type="hidden" id="rfid" />
+      <div>
+      <label class="block text-sm">Name</label>
+      <input id="name" type="text" placeholder="Mogli" class="bg-gray-800 px-4 py-2 rounded w-full" />
+    </div>
+    <div>
+      <label class="block text-sm">Silo</label>
+        <select id="silo" class="bg-gray-800 px-4 py-2 rounded w-full">
+            <option value="1"  selected>Left</option>
+            <option value="2">Right</option>
+        </select>
+    </div>
+    <div>
+      <label class="block text-sm">Time Window in min</label>
+      <input id="timeWindow" type="text" placeholder="60" class="bg-gray-800 px-4 py-2 rounded w-full" />
+    </div>
+    <div>
+      <label class="block text-sm">Amount (g)</label>
+      <input id="amount" type="number" step="1" class="bg-gray-800 px-4 py-2 rounded w-full" />
+    </div>
+    <button class="bg-teal-500 px-4 py-2 rounded">Save</button>
+  </form>
+  <script src="js/api.js"></script>
+  <script src="js/register-pet.js"></script>
+</body>
+</html>

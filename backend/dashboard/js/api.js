@@ -18,4 +18,11 @@ const API = {
       body: JSON.stringify(schedule),
     }).then(res => res.json());
   },
+  async registerPet(pet){
+    return fetch("pet/create",{
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(pet)
+    }).then(res => res.json());
+  }
 };
