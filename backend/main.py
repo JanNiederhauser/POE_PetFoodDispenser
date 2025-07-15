@@ -13,7 +13,7 @@ def is_within_time_window(time_window: int, rfid: str) -> bool:
     # datasets.last_feedings[rfid] = datetime.now()
     now = datetime.now()
     # test if now is ge the time of last feeding + defined time
-    return now >= lastFeeding + timedelta(minutes=time_window)
+    return now >= lastFeeding + timedelta(minutes=int(time_window))
 
 def find_pet(rfid: str):
     return next((p for p in datasets.pets if p["rfid"] == rfid), None)
@@ -109,7 +109,7 @@ def feeding_check(rfid: str):
     allowed = is_within_time_window(sched["timeWindow"],rfid)
     return models.FeedingCheckResponse(
         allowed=allowed,
-        siloId=pet["silo"],
+        siloId=pet["silo"], # 1 = left, 2 = right
         # DONE give brrrr data on how much food can be dispensed
         amount=sched["amount"] # in grams
     )
