@@ -3,8 +3,8 @@ const rfid = params.get("rfid");
 document.getElementById("rfid").value = rfid;
 
 API.getPet(rfid).then(pet => {
-  document.getElementById("timeWindow").value = "08:00-20:00";
-  document.getElementById("amount").value = "0.5";
+  document.getElementById("timeWindow").value = "40";
+  document.getElementById("amount").value = "10";
 });
 
 document.getElementById("edit-form").addEventListener("submit", async e => {

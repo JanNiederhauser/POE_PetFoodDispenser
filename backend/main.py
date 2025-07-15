@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from fastapi.staticfiles import StaticFiles
 import datasets
 import models
@@ -8,16 +8,12 @@ app = FastAPI()
 
 # ----------- Utilities -----------
 
-def is_within_time_window(time_window: str) -> bool:
-    now = datetime.now().time()
-    try:
-        start_str, end_str = time_window.split("-")
-        start = time.fromisoformat(start_str)
-        end = time.fromisoformat(end_str)
-        return start <= now <= end
-    except Exception:
-        return False
-
+def is_within_time_window(time_window: int, rfid: str) -> bool:
+    lastFeeding = datasets.last_feedings[rfid]
+    # datasets.last_feedings[rfid] = datetime.now()
+    now = datetime.now()
+    # test if now is ge the time of last feeding + defined time
+    return now >= lastFeeding + timedelta(minutes=time_window)
 
 def find_pet(rfid: str):
     return next((p for p in datasets.pets if p["rfid"] == rfid), None)
@@ -76,7 +72,7 @@ def delete_pet(rfid: str):
 
 # ----------- Feeding Schedule Management -----------
 
-# TODO rework schedule dataset and logic to allow for intervals and grams
+# DONE rework schedule dataset and logic to allow for intervals and grams
 
 @app.post("/schedule/create")
 def create_schedule(schedule: models.FeedingSchedule):
@@ -99,7 +95,7 @@ def update_schedule(schedule: models.FeedingSchedule):
 
 @app.post("/feeding/check/{rfid}")
 def feeding_check(rfid: str):
-    #TODO give brrrr data on how much food can be dispensed
+
     pet = find_pet(rfid)
     if not pet:
         datasets.unknown_rfid_events.append({"rfid": rfid, "timestamp": datetime.now()})
@@ -108,12 +104,14 @@ def feeding_check(rfid: str):
     sched = find_schedule(rfid)
     if not sched:
         raise HTTPException(status_code=404, detail="Schedule not found")
-    # TODO rework schedule system so its 30min 100g == cat can enter every 30min and get 100g per 30min
-    allowed = is_within_time_window(sched["timeWindow"])
+    # DONE rework schedule system so its 30min 100g == cat can enter every 30min and get 100g per 30min
+    # reworked is_within_time_window to account for minute differences instead of time windows
+    allowed = is_within_time_window(sched["timeWindow"],rfid)
     return models.FeedingCheckResponse(
         allowed=allowed,
         siloId=pet["silo"],
-        maxAmount=sched["amount"]
+        # DONE give brrrr data on how much food can be dispensed
+        amount=sched["amount"] # in grams
     )
 
 
@@ -131,10 +129,6 @@ def feeding_confirm(rfid: str, newScaleWeight: float, currentHeight: float):
     if not sched:
         raise HTTPException(status_code=404, detail="Schedule not found")
 
-    prev_weight = silo["stockWeight"]
-    dispensed = round(prev_weight - newScaleWeight, 3)
-    violated = not is_within_time_window(sched["timeWindow"])
-
     silo["percentage"] =  100 - currentHeight * 100 / silo["height"]
 
     silo["stockWeight"] = newScaleWeight
@@ -143,11 +137,9 @@ def feeding_confirm(rfid: str, newScaleWeight: float, currentHeight: float):
     event = models.FeedingEvent(
         rfid=rfid,
         timestamp=datetime.now(),
-        amountDispensed=dispensed,
-        violatedSchedule=violated
     )
 
-    return {"status": "ok", "event": event}
+    return {"status": "ok"} # basically not needed lol | , "event": event}
 
 
 # ----------- Unknown RFID Handling -----------
@@ -171,7 +163,7 @@ def register_pet_with_schedule(
         rfid: str,
         silo: int,
         timeWindow: str,
-        amount: float
+        amount: int
 ):
     if find_pet(rfid):
         raise HTTPException(status_code=400, detail="Pet already exists")
@@ -194,12 +186,6 @@ def register_pet_with_schedule(
 @app.get("/backend/health")
 def health():
     return {"status": "ok"}
-
-
-@app.get("/backend/connection")
-def connection():
-    return {"status": "connected"}
-
 
 # ------------ Dashboard mount -----------
 

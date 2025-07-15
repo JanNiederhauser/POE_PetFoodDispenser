@@ -33,8 +33,8 @@ silos = [
 feeding_schedules = [
     {
         "rfid": "123",
-        "timeWindow": "08:00-20:00",
-        "amount": 0.5
+        "timeWindow": "40",
+        "amount": 10
     }
 ]
 

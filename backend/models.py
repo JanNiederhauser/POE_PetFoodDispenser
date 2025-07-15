@@ -17,7 +17,7 @@ class FeedingSchedule(BaseModel):
 class FeedingCheckResponse(BaseModel):
     allowed: bool
     siloId: int
-    maxAmount: float
+    amount: float
 
 
 class Silo(BaseModel):
