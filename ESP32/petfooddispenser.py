@@ -17,10 +17,11 @@ SCHNECKE1_PIN = 10          # GPIO10 - Motor to dispense food (silo 1)
 SCHNECKE2_PIN = 11          # GPIO11 - Motor to dispense food (silo 2)
 
 # HX711 pins
-HX_ENTRY_DT = 4             # Eingangs-Waage
-HX_ENTRY_SCK = 5
-HX_PLATES_DT = 12           # Waage unter den Näpfen
-HX_PLATES_SCK = 13
+HX_ENTRY_DT = 15             # Eingangs-Waage
+HX_ENTRY_SCK = 4
+HX_PLATES_DT = 6          # Waage unter den Näpfen
+HX_PLATES_SCK = 4
+HX_channel = 3
 
 # RFID (SPI: sck, mosi, miso, rst, cs)
 rdr = MFRC522(spi_id=1, sck=14, mosi=15, miso=16, cs=17, rst=18)
@@ -40,10 +41,29 @@ plate1_servo = PWM(Pin(SERVO_PLATE1_LOCK_PIN), freq=50)
 plate2_servo = PWM(Pin(SERVO_PLATE2_LOCK_PIN), freq=50)
 schnecke1 = Pin(SCHNECKE1_PIN, Pin.OUT)
 schnecke2 = Pin(SCHNECKE2_PIN, Pin.OUT)
-hx_entry = HX711(d_out=Pin(HX_ENTRY_DT), pd_sck=Pin(HX_ENTRY_SCK))
-hx_plate = HX711(d_out=Pin(HX_PLATES_DT), pd_sck=Pin(HX_PLATES_SCK))
+hx_entry = HX711(HX_ENTRY_DT, HX_ENTRY_SCK, HX_channel)
+hx_plate = HX711(HX_PLATES_DT, HX_PLATES_SCK, HX_channel)
+
 
 # --- FUNCTIONS ---
+def read_weight(sensor):
+    """Reads and prints the weight from the HX711 sensor."""
+    sensor.power_on()
+
+    while sensor.is_ready():
+        pass
+
+    raw_measurement = sensor.read(False)
+
+    while sensor.is_ready():
+        pass
+
+    raw_measurement = sensor.read(True)
+    print(raw_measurement)
+
+    weight = raw_measurement / 420
+    print('Total Weight is:', weight)
+    return weight
 
 
 def read_rfid():
@@ -105,7 +125,7 @@ def read_scale(hx):
 def cat_inside():
     try:
         weight = read_scale(hx_entry)
-        return weight > 5000  # Schwelle fuer "Katze in Box" anpassen
+        return weight > catDetectionWeightEvent  # Schwelle fuer "Katze in Box" anpassen
     except:
         return False
 
@@ -133,6 +153,10 @@ def close_cd(plate):
     time.sleep(1)
     CD1_CTRL.off()
     CD2_CTRL.off()
+
+# Calibrate HX711 scales
+entryScaleInitialWeight = hx_entry.read()
+catDetectionWeightEvent = entryScaleInitialWeight + 150 # Adjust threshold for cat detection
 
 
 # --- MAIN LOOP ---
