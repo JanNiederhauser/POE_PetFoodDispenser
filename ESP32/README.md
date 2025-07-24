@@ -44,7 +44,7 @@ Replace `COM3` with your actual serial port. Can be checked in device manager
 ### 3. Flash the firmware
 
 ```bash
-esptool --baud 460800 write_flash 0 FW_NAME.bin 
+esptool --chip esp32c6 --port COM3 --baud 115200 write_flash 0 'ESP32_GENERIC_C6-20250415-v1.25.0 (1).bin'
 ```
 
 ---

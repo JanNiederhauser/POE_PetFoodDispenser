@@ -27,13 +27,21 @@ HX_channel = 3
 rdr = MFRC522(spi_id=1, sck=14, mosi=15, miso=16, cs=17, rst=18)
 
 # HC-SR04 ultrasonic sensors for silo fill-level detection
-ultra_silo1 = HCSR04(trigger_pin=21, echo_pin=22)  # HC-SR005
-ultra_silo2 = HCSR04(trigger_pin=23, echo_pin=24)  # HC-SR004
+ultra_silo1 = HCSR04(trigger_pin=21, echo_pin=22)  # HC-SR005 links
+ultra_silo2 = HCSR04(trigger_pin=12, echo_pin=13)  # HC-SR004 rechts
 
 # CD-ROM Laufwerkssteuerung
-CD_POWER = Pin(1, Pin.OUT)
-CD1_CTRL = Pin(3, Pin.OUT)
-CD2_CTRL = Pin(2, Pin.OUT)
+CD1_1_CTRL = Pin(11, Pin.OUT)
+CD1_2_CTRL = Pin(2, Pin.OUT)
+CD2_1_CTRL = Pin(10, Pin.OUT)
+CD2_2_CTRL = Pin(8, Pin.OUT)
+CD1_1_CTRL(1)
+CD1_2_CTRL(1)
+CD2_1_CTRL(1)
+CD2_2_CTRL(1)
+time.sleep(0.2)
+CD_POWER = Pin(3, Pin.OUT)
+CD_POWER(1)  # CD-ROM Laufwerk ausschalten
 
 # --- INIT ---
 entry_servo = PWM(Pin(SERVO_ENTRY_LOCK_PIN), freq=50)
@@ -125,7 +133,8 @@ def read_scale(hx):
 def cat_inside():
     try:
         weight = read_scale(hx_entry)
-        return weight > catDetectionWeightEvent  # Schwelle fuer "Katze in Box" anpassen
+        # Schwelle fuer "Katze in Box" anpassen
+        return weight > catDetectionWeightEvent
     except:
         return False
 
@@ -145,18 +154,28 @@ def check_silo_fill(silo):
 
 def close_cd(plate):
     if plate == 1:
-        CD1_CTRL.on()
+        CD1_1_CTRL(0)
+        CD1_2_CTRL(0)
+        time.sleep(0.2)
+        CD_POWER(0)  # CD-ROM Laufwerk einschalten
+        time.sleep(1.5)
+        CD_POWER(1)  # CD-ROM Laufwerk ausschalten
+        CD1_1_CTRL(1)
+        CD1_2_CTRL(1)
     elif plate == 2:
-        CD2_CTRL.on()
-    time.sleep(0.5)
-    CD_POWER.off()
-    time.sleep(1)
-    CD1_CTRL.off()
-    CD2_CTRL.off()
+        # CD 2
+        CD2_1_CTRL(0)
+        CD2_2_CTRL(0)
+        time.sleep(0.2)
+        CD_POWER(0)  # CD-ROM Laufwerk einschalten
+        time.sleep(1.5)
+        CD_POWER(1)  # CD-ROM Laufwerk ausschalten
+        CD2_1_CTRL(1)
+        CD2_2_CTRL(1)
 
 # Calibrate HX711 scales
 entryScaleInitialWeight = hx_entry.read()
-catDetectionWeightEvent = entryScaleInitialWeight + 150 # Adjust threshold for cat detection
+catDetectionWeightEvent = entryScaleInitialWeight + 150  # Adjust threshold for cat detection
 
 
 # --- MAIN LOOP ---
