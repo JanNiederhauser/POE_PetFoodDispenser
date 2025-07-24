@@ -9,11 +9,9 @@ app = FastAPI()
 # ----------- Utilities -----------
 
 def is_within_time_window(time_window: int, rfid: str) -> bool:
-    lastFeeding = datasets.last_feedings[rfid]
     # datasets.last_feedings[rfid] = datetime.now()
-    now = datetime.now()
     # test if now is ge the time of last feeding + defined time
-    return now >= lastFeeding + timedelta(minutes=int(time_window))
+    return datetime.now() >= datasets.last_feedings[rfid] + timedelta(minutes=int(time_window))
 
 def find_pet(rfid: str):
     return next((p for p in datasets.pets if p["rfid"] == rfid), None)
