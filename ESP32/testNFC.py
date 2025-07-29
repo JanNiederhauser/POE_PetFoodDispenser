@@ -6,7 +6,7 @@ sck = Pin(18, Pin.OUT)
 copi = Pin(23, Pin.OUT) # Controller out, peripheral in
 cipo = Pin(19, Pin.OUT) # Controller in, peripheral out
 spi = SoftSPI(baudrate=100000, polarity=0, phase=0, sck=sck, mosi=copi, miso=cipo)
-sda = Pin(21, Pin.OUT)
+sda = Pin(5, Pin.OUT)
 reader = MFRC522(spi, sda)
 
 print('Place Card In Front Of Device To Read Unique Address')

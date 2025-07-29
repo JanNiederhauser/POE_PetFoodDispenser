@@ -209,14 +209,14 @@ class MFRC522:
 		while True:
 			n = self._read_reg(MFRC522_COM_IRQ_REG)
 			i -= 1
-			if ~((i != 0) and ~(n & 0x01) and ~(n & wait_irq)):
+			if not ((i != 0) and not (n & 0x01) and not (n & wait_irq)):
 				break
 		self._clear_bit_mask(MFRC522_BIT_FRAMING_REG, 0x80)
 		if i:
 			if (self._read_reg(MFRC522_ERROR_REG) & 0x1B) == 0x00:
 				status = self.OK
 				if n & irq_en & 0x01:
-					status = self.NOTAGERR
+					status = self.NO_TAG_ERR
 				elif cmd == TRANSCEIVE:
 					n = self._read_reg(MFRC522_FIFO_LEVEL_REG)
 					last_bits = self._read_reg(MFRC522_CONTROL_REG) & 0x07
