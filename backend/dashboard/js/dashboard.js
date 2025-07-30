@@ -32,6 +32,7 @@ async function renderDashboard() {
   unknownDiv.innerHTML = unknownRFIDs.map(e => `
     <div class="bg-gray-800 p-2 rounded flex justify-between items-center">
       <span>RFID: ${e.rfid}</span>
+      <a href="#" onclick="dismissUnknownRFID(${e.rfid})" class="text-sm text-teal-400">Dismiss</a>
       <a href="/register-pet.html?rfid=${e.rfid}" class="text-sm text-teal-400">Register</a>
     </div>
   `).join('');

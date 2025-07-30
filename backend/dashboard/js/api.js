@@ -8,6 +8,9 @@ const API = {
   async getUnknownRFIDs() {
     return fetch("/dashboard/unknown-rfids").then(res => res.json());
   },
+  async dismissUnknownRFID(rfid){
+    return fetch(`/dashboard/unknown-rfids/dismiss/${rfid}`).then(res => res.json());
+  },
   async getPet(rfid) {
     return fetch(`/pet/get/${rfid}`).then(res => res.json());
   },
