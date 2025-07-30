@@ -97,7 +97,7 @@ def feeding_check(rfid: str):
     pet = find_pet(rfid)
     if not pet:
         datasets.unknown_rfid_events.append({"rfid": rfid, "timestamp": datetime.now()})
-        raise HTTPException(status_code=404, detail="Pet not found")
+        raise HTTPException(status_code=404, detail="Pet not found, added to unknown list")
 
     sched = find_schedule(rfid)
     if not sched:
