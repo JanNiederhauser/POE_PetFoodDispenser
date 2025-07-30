@@ -34,7 +34,8 @@ pip install fastapi uvicorn
 ## ▶️ Running the Server
 
 ```bash
-uvicorn main:app --reload
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
 ```
 
 Access the dashboard via: `http://localhost:8000/`
