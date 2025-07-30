@@ -130,13 +130,13 @@ def get_pet(rfid):
     print(f"👤 Looking up pet with RFID: {rfid}")
     try:
         resp = urequests.get(f"{API_BASE}/pet/get/{rfid}")
+        #resp = urequests.get(f"{API_BASE}/feeding/check/{rfid}")
         pet_data = resp.json()
         print(f"✅ Pet found: {pet_data}")
         return pet_data
     except Exception as e:
         print(f"❌ Pet lookup failed: {e}")
         return None
-
 
 def confirm_feeding(rfid, scale_value):
     print(f"📝 Confirming feeding for RFID {rfid}, scale weight: {scale_value}g")
@@ -253,9 +253,10 @@ def main():
         
         if rfid:
             print(f"RFID detected: {rfid}")
-            pet = get_pet(rfid)  # Authenticate pet using backend API
+            # pet = get_pet(rfid)  # Authenticate pet using backend API
+            data = urequests.get(f"{API_BASE}/feeding/check/{rfid}")
             
-            if pet:
+            if data.status_code != 404:
                 print(f"Pet authenticated: {pet['name']}")
                 assigned_silo = pet.get("silo")
                 print(f"Assigned silo: {assigned_silo}")
