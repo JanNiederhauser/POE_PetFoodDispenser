@@ -28,7 +28,6 @@ class Silo(BaseModel):
 class FeedingEvent(BaseModel):
     rfid: str
     timestamp: datetime
-    amountDispensed: float
     violatedSchedule: bool = False
 
 
