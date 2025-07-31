@@ -160,24 +160,18 @@ def dismiss_unknown_rfid(rfid: str):
 
 
 @app.post("/dashboard/register-pet")
-def register_pet_with_schedule(
-        name: str,
-        rfid: str,
-        silo: int,
-        timeWindow: str,
-        amount: int
-):
-    if find_pet(rfid):
+def register_pet_with_schedule(data : models.RegisterPetRequest):
+    if find_pet(data.rfid):
         raise HTTPException(status_code=400, detail="Pet already exists")
 
-    pet = models.Pet(rfid=rfid, name=name, silo=silo)
-    schedule = models.FeedingSchedule(rfid=rfid, timeWindow=timeWindow, amount=amount)
+    pet = models.Pet(rfid=data.rfid, name=data.name, silo=data.silo)
+    schedule = models.FeedingSchedule(rfid=data.rfid, timeWindow=data.timeWindow, amount=data.amount)
 
     datasets.pets.append(pet.model_dump())
     datasets.feeding_schedules.append(schedule.model_dump())
 
     datasets.unknown_rfid_events = [
-        e for e in datasets.unknown_rfid_events if e["rfid"] != rfid
+        e for e in datasets.unknown_rfid_events if e["rfid"] != data.rfid
     ]
 
     return {"status": "registered", "pet": pet, "schedule": schedule}

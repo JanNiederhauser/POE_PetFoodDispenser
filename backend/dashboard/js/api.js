@@ -19,7 +19,7 @@ const API = {
     }).then(res => res.json());
   },
   async registerPet(pet){
-    return fetch("pet/create",{
+    return fetch("/dashboard/register-pet",{
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(pet)
