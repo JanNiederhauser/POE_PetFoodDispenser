@@ -10,8 +10,8 @@ class Pet(BaseModel):
 
 class FeedingSchedule(BaseModel):
     rfid: str
-    timeWindow: str  # e.g., "08:00-20:00"
-    amount: float     # max amount per feeding
+    timeWindow: int
+    amount: float
 
 
 class FeedingCheckResponse(BaseModel):
@@ -22,13 +22,14 @@ class FeedingCheckResponse(BaseModel):
 
 class Silo(BaseModel):
     id: int
-    stockWeight: float
+    height: float
+    currentHeight: float
+    percentage: float
 
 
 class FeedingEvent(BaseModel):
     rfid: str
     timestamp: datetime
-    amountDispensed: float
     violatedSchedule: bool = False
 
 
@@ -36,15 +37,21 @@ class PetCreateRequest(BaseModel):
     name: str
     rfid: str
     silo: int
-    profile_picture: str | None = None
 
 class ScheduleCreateRequest(BaseModel):
     rfid: str
-    timeWindow: str
+    timeWindow: int
     amount: float
 
 class FeedingConfirmRequest(BaseModel):
     rfid: str
     newScaleWeight: float
+
+class RegisterPetRequest(BaseModel):
+    name: str
+    rfid: str
+    silo: int
+    timeWindow: int
+    amount: float
 
 

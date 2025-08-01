@@ -1,42 +1,23 @@
 from datetime import datetime, timedelta
 
-pets = [
-    {
-        "rfid": "123",
-        "name": "Michi",
-        "silo": 1
-    },
-    {
-        "rfid": "666",
-        "name": "momo",
-        "silo": 2
-    }
-]
+pets = []
 
 silos = [
     {
         "id": 1,
         "height": 23,
-        "currentHeight": 10,
+        "currentHeight": 23,
         "percentage": 100,
-        "stockWeight": 12.6
     },
     {
         "id": 2,
         "height": 23,
-        "currentHeight": 22,
+        "currentHeight": 23,
         "percentage": 100,
-        "stockWeight": 5.3
     }
 ]
 
-feeding_schedules = [
-    {
-        "rfid": "123",
-        "timeWindow": "40",
-        "amount": 10
-    }
-]
+feeding_schedules = []
 
 
 # Tracks last feeding time per RFID
@@ -44,5 +25,5 @@ last_feedings = {}
 
 # Tracks unknown rfids
 # each entry: {"rfid": str, "timestamp": datetime}
-unknown_rfid_events = [{"rfid": "123AAAAAAA", "timestamp": "heute"}]
+unknown_rfid_events = []
 

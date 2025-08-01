@@ -19,10 +19,29 @@ const API = {
     }).then(res => res.json());
   },
   async registerPet(pet){
-    return fetch("pet/create",{
+    return fetch("/dashboard/register-pet",{
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(pet)
     }).then(res => res.json());
+  },
+   async dismissRfid(rfid) {
+    fetch(`/dashboard/unknown-rfids/dismiss/${rfid}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+        // Add CSRF headers here if needed
+      },
+      body: JSON.stringify({}) // or null, depending on your backend
+    }).then(response => {
+      if (response.ok) {
+        location.reload();
+      } else {
+        alert("Failed to dismiss.");
+      }
+    }).catch(err => {
+      console.error("Dismiss error:", err);
+      alert("Error occurred.");
+    });
   }
 };

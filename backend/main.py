@@ -11,7 +11,7 @@ app = FastAPI()
 def is_within_time_window(time_window: int, rfid: str) -> bool:
     # datasets.last_feedings[rfid] = datetime.now()
     # test if now is ge the time of last feeding + defined time
-    return datetime.now() >= datasets.last_feedings[rfid] + timedelta(minutes=int(time_window))
+    return datetime.now() >= datasets.last_feedings.get(rfid, datetime.min) + timedelta(minutes=int(time_window))
 
 def find_pet(rfid: str):
     return next((p for p in datasets.pets if p["rfid"] == rfid), None)
@@ -23,6 +23,10 @@ def find_schedule(rfid: str):
 
 def find_silo(silo_id: int):
     return next((s for s in datasets.silos if s["id"] == silo_id), None)
+
+def convert_amount(amount: int) -> float:
+    # 1s of running dispenser = 7g
+    return amount / 7 * 1
 
 
 # ----------- listings -----------
@@ -82,8 +86,8 @@ def create_schedule(schedule: models.FeedingSchedule):
 
 @app.post("/schedule/update")
 def update_schedule(schedule: models.FeedingSchedule):
-    for idx, s in enumerate(datasets.feeding_schedules):
-        if s["rfid"] == schedule.rfid:
+    for idx, _ in enumerate(datasets.feeding_schedules):
+        if _["rfid"] == schedule.rfid:
             datasets.feeding_schedules[idx] = schedule.model_dump()
             return {"status": "updated", "schedule": schedule}
     raise HTTPException(status_code=404, detail="Schedule not found")
@@ -97,7 +101,7 @@ def feeding_check(rfid: str):
     pet = find_pet(rfid)
     if not pet:
         datasets.unknown_rfid_events.append({"rfid": rfid, "timestamp": datetime.now()})
-        raise HTTPException(status_code=404, detail="Pet not found")
+        raise HTTPException(status_code=404, detail="Pet not found, added to unknown list")
 
     sched = find_schedule(rfid)
     if not sched:
@@ -109,7 +113,7 @@ def feeding_check(rfid: str):
         allowed=allowed,
         siloId=pet["silo"], # 1 = left, 2 = right
         # DONE give brrrr data on how much food can be dispensed
-        amount=sched["amount"] # in grams
+        amount=convert_amount(sched["amount"]) # in seconds
     )
 
 
@@ -156,24 +160,18 @@ def dismiss_unknown_rfid(rfid: str):
 
 
 @app.post("/dashboard/register-pet")
-def register_pet_with_schedule(
-        name: str,
-        rfid: str,
-        silo: int,
-        timeWindow: str,
-        amount: int
-):
-    if find_pet(rfid):
+def register_pet_with_schedule(data : models.RegisterPetRequest):
+    if find_pet(data.rfid):
         raise HTTPException(status_code=400, detail="Pet already exists")
 
-    pet = models.Pet(rfid=rfid, name=name, silo=silo)
-    schedule = models.FeedingSchedule(rfid=rfid, timeWindow=timeWindow, amount=amount)
+    pet = models.Pet(rfid=data.rfid, name=data.name, silo=data.silo)
+    schedule = models.FeedingSchedule(rfid=data.rfid, timeWindow=data.timeWindow, amount=data.amount)
 
     datasets.pets.append(pet.model_dump())
     datasets.feeding_schedules.append(schedule.model_dump())
 
     datasets.unknown_rfid_events = [
-        e for e in datasets.unknown_rfid_events if e["rfid"] != rfid
+        e for e in datasets.unknown_rfid_events if e["rfid"] != data.rfid
     ]
 
     return {"status": "registered", "pet": pet, "schedule": schedule}
