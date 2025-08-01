@@ -15,15 +15,23 @@ print("🔧 Initializing Pet Food Dispenser...")
 print(f"📡 Backend API: {API_BASE}")
 
 SERVO_ENTRY_LOCK_PIN = 9    # GPIO6 - Entry servo
+SERVO_LOCK = 120
+SERVO_UNLOCKED = 30
 SCHNECKE1_PIN = 1         # GPIO10 - Motor to dispense food (silo 1)
 SCHNECKE2_PIN = 7          # GPIO11 - Motor to dispense food (silo 2)
 
 # HX711 pins
 HX_ENTRY_DT = 15             # Eingangs-Waage
 HX_ENTRY_SCK = 4
-HX_PLATES_DT = 6          # Waage unter den Näpfen
+HX_PLATES_DT = 12          # Waage unter den Näpfen
 HX_PLATES_SCK = 4
 HX_channel = 3
+threshhold = 50
+
+Pin(HX_ENTRY_SCK, Pin.IN)   # high-Z
+Pin(HX_ENTRY_DT, Pin.IN)     # high-Z
+Pin(HX_PLATES_SCK, Pin.IN)  # high-Z
+#Pin(HX_PLATES_DT, Pin.IN)    # high-Z
 
 # RFID (SPI: sck, mosi, miso, rst, cs)
 sck = Pin(18, Pin.OUT)
@@ -36,23 +44,22 @@ reader = MFRC522(spi, sda)
 
 # HC-SR04 ultrasonic sensors for silo fill-level detection
 ultra_silo1 = HCSR04(trigger_pin=20, echo_pin=22)  # HC-SR005 links
-#ultra_silo2 = HCSR04(trigger_pin=12, echo_pin=13)  # HC-SR004 rechts  - funzt nicht
+ultra_silo2 = HCSR04(trigger_pin=10, echo_pin=2)  # HC-SR004 rechts
 
 # CD-ROM Laufwerkssteuerung
-CD1_1_CTRL = Pin(11, Pin.OUT, value=1)
-CD1_2_CTRL = Pin(2, Pin.OUT, value=1)
-CD2_1_CTRL = Pin(10, Pin.OUT, value=1)
-CD2_2_CTRL = Pin(8, Pin.OUT, value=1)
+CD1_CTRL = Pin(11, Pin.OUT, value=1)
+CD2_CTRL = Pin(8, Pin.OUT, value=1)
 time.sleep(0.2)
-CD_POWER = Pin(3, Pin.OUT, value=1)
+CD_POWER = Pin(3, Pin.OUT, value=0)
 
 # --- INIT ---
 print("🏗️ Initializing hardware components...")
-#entry_servo = PWM(Pin(SERVO_ENTRY_LOCK_PIN), freq=50)
+entry_servo = PWM(Pin(SERVO_ENTRY_LOCK_PIN), freq=50)
+entry_servo.duty(SERVO_LOCK)  # Set initial position to closed
 schnecke1 = Pin(SCHNECKE1_PIN, Pin.OUT, value=1)
 schnecke2 = Pin(SCHNECKE2_PIN, Pin.OUT, value=1)
-hx_entry = HX711(HX_ENTRY_DT, HX_ENTRY_SCK, HX_channel)
-hx_plate = HX711(HX_PLATES_DT, HX_PLATES_SCK, HX_channel)
+hx_entry = HX711(HX_ENTRY_SCK, HX_ENTRY_DT)
+#hx_plate = HX711(HX_PLATES_SCK, HX_PLATES_DT)
 print("✅ Hardware initialization complete")
 
 # --- FUNCTIONS ---
@@ -149,18 +156,65 @@ def confirm_feeding(rfid, scale_value):
 
 def unlock_servo(servo):
     print("🔓 Unlocking servo...")
-    # servo.duty(40)  # Open
-    # time.sleep(1)
-    # servo.duty(77)  # Close
+    servo.duty(SERVO_UNLOCKED)  # Open
     print("✅ Servo unlocked")
 
 
-def dispense_food(pin, duration=2):
-    print(f"🥘 Dispensing food for {duration} seconds...")
-    pin.on()
-    time.sleep(duration)
-    pin.off()
-    print("✅ Food dispensed")
+def lock_servo(servo):
+    print("🔓 Locking servo...")
+    servo.duty(SERVO_LOCK)  # closed
+    print("❌ Servo locked")
+
+
+def dispense_food(schnecke, target_weight_grams, foodDuration):
+    print(f"🥘 Dispensing food until {target_weight_grams}g is reached...")
+    #TODO fix this
+    hx_entry.powerDown()
+    time.sleep(0.1)  # Allow HX711 to stabilize
+    #hx_plate.powerUp()
+    time.sleep(0.1)  # Allow HX711 to stabilize
+    # Get initial weight
+    #hx_plate.tare()  # Reset tare to zero
+    #initial_weight = 0# abs(hx_plate.read()) * 3.3
+    #if initial_weight == -1:
+    #    print("❌ Cannot read initial weight, aborting dispensing")
+    #    return
+    #
+    #target_total_weight = initial_weight + target_weight_grams
+    #print(f"📊 Initial weight: {initial_weight}g, Target total: {target_total_weight}g")
+    
+    schnecke.off()  # Start dispensing
+    time.sleep(foodDuration)
+    #try:
+    #    while True:
+    #        consecutive_reaches = 0  # Counter for consecutive target weight reaches
+    #        
+    #        while True:
+    #            current_weight = hx_plate.read()
+    #            if current_weight == -1:
+    #                print("❌ Scale reading failed during dispensing")
+    #                break
+    #            
+    #            dispensed_amount = current_weight - initial_weight
+    #            print(f"📊 Current: {current_weight}g, Dispensed: {dispensed_amount}g")
+    #            
+    #            if current_weight >= target_total_weight:
+    #                consecutive_reaches += 1
+    #                if consecutive_reaches >= 2:  # Require two consecutive confirmations
+    #                    print(f"✅ Target weight reached! Dispensed {dispensed_amount}g")
+    #                    break
+    #            else:
+    #                consecutive_reaches = 0  # Reset counter if target not reached
+    #            
+    #            time.sleep(0.5)  # Check weight every 0.5 seconds
+    #        
+    #finally:
+    #    schnecke.on()  # Always turn off the motor
+    #    print("✅ Food dispensing complete")
+    schnecke.on()  # Always turn off the motor
+    hx_entry.powerUp()
+    time.sleep(0.1)  # Allow HX711 to stabilize
+    print("✅ Food dispensing complete")
 
 
 def read_scale(hx):
@@ -175,12 +229,44 @@ def read_scale(hx):
         return -1
 
 
-def cat_inside():
+def cat_inside(catDetectionWeightEvent):
     try:
-        weight = read_scale(hx_entry)
+        # Try to get a reading from the HX711
+        try:
+            raw_weight = hx_entry.read()
+        except Exception as read_error:
+            print(f"❌ HX711 read error: {read_error}")
+            return False
+        
+        # Handle None or invalid readings
+        if raw_weight is None:
+            print("❌ No weight reading available")
+            return False
+        
+        # Simple type checking and conversion
+        try:
+            if isinstance(raw_weight, str):
+                # Try to convert string to number
+                weight_num = float(raw_weight)
+            elif isinstance(raw_weight, (int, float)):
+                weight_num = float(raw_weight)
+            else:
+                print(f"❌ Unexpected weight type: {type(raw_weight)}")
+                return False
+            
+            # Apply calibration factor
+            weight = abs(weight_num) * 3.3
+            
+        except (ValueError, TypeError) as conv_error:
+            print(f"❌ Weight conversion error: {conv_error}")
+            return False
+            
+        # Check if cat is inside
         inside = weight > catDetectionWeightEvent
-        print(f"Cat detection: {'INSIDE' if inside else 'OUTSIDE'} (weight: {weight}g, threshold: {catDetectionWeightEvent}g)")
+        print(f"Cat detection: {'INSIDE' if inside else 'OUTSIDE'} (weight: {weight:.1f}g, threshold: {catDetectionWeightEvent}g)")
+        
         return inside
+
     except Exception as e:
         print(f"❌ Cat detection failed: {e}")
         return False
@@ -207,33 +293,23 @@ def check_silo_fill(silo):
 
 def close_cd(plate):
     print(f"📀 Closing CD tray for plate {plate}...")
-    if plate == 1:
-        CD1_1_CTRL(0)
-        CD1_2_CTRL(0)
+    if plate == 2:
+        CD1_CTRL(0)
         time.sleep(0.2)
         CD_POWER(0)  # CD-ROM Laufwerk einschalten
         time.sleep(1.5)
         CD_POWER(1)  # CD-ROM Laufwerk ausschalten
-        CD1_1_CTRL(1)
-        CD1_2_CTRL(1)
-    elif plate == 2:
-        CD2_1_CTRL(0)
-        CD2_2_CTRL(0)
+        CD1_CTRL(1)
+    elif plate == 1:
+        CD2_CTRL(0)
         time.sleep(0.2)
         CD_POWER(0)  # CD-ROM Laufwerk einschalten
         time.sleep(1.5)
         CD_POWER(1)  # CD-ROM Laufwerk ausschalten
-        CD2_1_CTRL(1)
-        CD2_2_CTRL(1)
+        CD2_CTRL(1)
+    elif plate == 0:
+        CD_POWER(0)
     print(f"✅ CD tray {plate} closed")
-
-
-# Calibrate HX711 scales
-print("Calibrating scales...")
-entryScaleInitialWeight = hx_entry.read()
-catDetectionWeightEvent = entryScaleInitialWeight + 150
-print(f"Entry scale initial weight: {entryScaleInitialWeight}")
-print(f"Cat detection threshold: {catDetectionWeightEvent}")
 
 
 # --- MAIN LOOP ---
@@ -254,50 +330,95 @@ def main():
         if rfid:
             print(f"RFID detected: {rfid}")
             # pet = get_pet(rfid)  # Authenticate pet using backend API
-            data = urequests.get(f"{API_BASE}/feeding/check/{rfid}")
-            
-            if data.status_code != 404:
-                print(f"Pet authenticated: {pet['name']}")
-                assigned_silo = pet.get("silo")
+            data = urequests.post(f"{API_BASE}/feeding/check/{rfid}")
+            # for test changed to = 404
+            if data.status_code == 404:
+                # Calibrate HX711 scales
+                print("Calibrating scales...")
+                hx_entry.powerUp()
+                time.sleep(0.1)  # Allow HX711 to stabilize
+                entryScaleInitialWeight = 0 #abs(hx_entry.read()) * 3.3 # Adjusted for calibration factor
+                catDetectionWeightEvent = entryScaleInitialWeight + threshhold
+                hx_entry.tare()  # Reset tare to zero
+                print(f"Entry scale initial weight: {entryScaleInitialWeight}")
+                print(f"Cat detection threshold: {catDetectionWeightEvent}")
+
+                data = {"name": "DummyPet", "silo": 2, "foodamount": 100, "foodDuration": 5}
+                print(f"Pet authenticated: {data['name']}")
+                assigned_silo = data.get("silo")
                 print(f"Assigned silo: {assigned_silo}")
                 
                 # Check silo fill-level before proceeding
                 fill_distance = check_silo_fill(assigned_silo)
-                if fill_distance > 25:
+                max_distance = 30  # Distance when silo is empty
+                min_distance = 5   # Distance when silo is full
+
+                if fill_distance > max_distance:
                     print(f"Silo {assigned_silo} possibly empty! Distance: {fill_distance}cm")
                     continue
+                elif fill_distance <= max_distance and fill_distance > min_distance:
+                    fill_percentage = int((max_distance - fill_distance) / (max_distance - min_distance) * 100)
+                    print(f"Silo {assigned_silo} fill level: {fill_percentage}%")
+                elif fill_distance <= min_distance:
+                    print(f"Silo {assigned_silo} is full! Distance: {fill_distance}cm")
                 
                 print("Unlocking entry...")
-                # unlock_servo(entry_servo)
-                time.sleep(1)  # Zeit fuer Katze zum Betreten
-                
-                if not cat_inside():
-                    print("❌ No cat entered, aborting feeding cycle")
+                unlock_servo(entry_servo)
+                hx_entry.powerUp()  # Power up the HX711 for entry scale
+                hx_entry.read()
+                time.sleep(1)  # Wait for servo to unlock
+                start_time = time.time()
+                consecutive_detections = 0
+
+                while time.time() - start_time < 30:
+                    if cat_inside(catDetectionWeightEvent):
+                        consecutive_detections += 1
+                        if consecutive_detections >= 3:  # Require 3 consecutive detections
+                            print("✅ Cat entered, proceeding with feeding cycle")
+                            break
+                    else:
+                        consecutive_detections = 0  # Reset if detection fails
+                    time.sleep(1)  # Check every second
+                else:
+                    print("❌ No cat entered within 30 seconds, aborting feeding cycle")
                     continue
                 
                 print("Cat detected inside, proceeding with feeding...")
                 
+                # Close the entry servo
+                print("Closing entry servo...")
+                lock_servo(entry_servo)
+
                 if assigned_silo == 1:
                     print("Opening plate 1 and dispensing from silo 1")
-                    # unlock_servo(plate1_servo)
-                    dispense_food(schnecke1)
+                    close_cd(1)
+                    dispense_food(schnecke1, data['foodamount'], data['foodDuration'])
                 elif assigned_silo == 2:
                     print("Opening plate 2 and dispensing from silo 2")
-                    # unlock_servo(plate2_servo)
-                    dispense_food(schnecke2)
+                    close_cd(2)
+                    dispense_food(schnecke2,data['foodamount'], data['foodDuration'])
                 
-                scale = read_scale(hx_plate)
-                confirm_feeding(rfid, scale)
+                #scale = read_scale(hx_plate)
+                #confirm_feeding(rfid, scale)
 
                 # Warten bis Katze wieder raus ist
                 print("Waiting for cat to exit...")
-                while cat_inside():
-                    time.sleep(1)
-                    print("Cat still inside...")
+                consecutive_no_detections = 0
+
+                while True:
+                    if not cat_inside(catDetectionWeightEvent):
+                        consecutive_no_detections += 1
+                        if consecutive_no_detections >= 3:  # Require 3 consecutive non-detections
+                            print("✅ Cat has exited")
+                            break
+                    else:
+                        consecutive_no_detections = 0  # Reset if cat still detected
+                        print("Cat still inside...")
+                    time.sleep(1)  # Check every second
                 
-                print("Cat has exited, closing plates...")
-                close_cd(assigned_silo)
                 print("✅ Feeding cycle complete")
+                time.sleep(5)
+                close_cd(0)  # Close CD tray after feeding
                 
             else:
                 print(f"Unknown pet with RFID {rfid}, notifying backend")
@@ -312,6 +433,9 @@ def main():
 if __name__ == '__main__':
     main()
 
+# Actually run the main function
+print("Starting Pet Food Dispenser...")
+main()
 # Actually run the main function
 print("Starting Pet Food Dispenser...")
 main()
