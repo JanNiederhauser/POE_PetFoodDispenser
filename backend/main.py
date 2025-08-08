@@ -131,7 +131,7 @@ def feeding_confirm(rfid: str, newScaleWeight: float, currentHeight: float):
     if not sched:
         raise HTTPException(status_code=404, detail="Schedule not found")
 
-    silo["percentage"] =  100 - currentHeight * 100 / silo["height"]
+    silo["percentage"] =  currentHeight * 100 / silo["height"]
 
     silo["stockWeight"] = newScaleWeight
     datasets.last_feedings[rfid] = datetime.now()
